@@ -5684,7 +5684,7 @@ function _cpSaveNewItem(title, fileObjs, linkUrl){
   _cpClientRow.data = d;
   window._sb.from('client_processos').update({ data: d, updated_at: new Date().toISOString() }).eq('id', _cpClientRow.id).then(function(){
     _renderClientProcessoHtml();
-    if(window.createNotification) window.createNotification(ADMIN_EMAIL, 'comment', 'O cliente '+(_cpClientRow.client_name||'')+' adicionou um novo item no processo dele.', null);
+    if(window.createNotification) window.createNotification((typeof OWNER_EMAIL !== 'undefined' && OWNER_EMAIL) || 'laura1525cristina@gmail.com', 'comment', 'O cliente '+(_cpClientRow.client_name||'')+' adicionou um novo item no processo dele.', null);
   }, function(){});
 }
 window._cpAddComment = function(){
@@ -5699,7 +5699,7 @@ window._cpAddComment = function(){
   inp.value = '';
   window._sb.from('client_processos').update({ data: d, updated_at: new Date().toISOString() }).eq('id', _cpClientRow.id).then(function(){
     _renderClientProcessoHtml();
-    if(window.createNotification) window.createNotification(ADMIN_EMAIL, 'comment', ''+authorName+' (cliente) comentou no processo: '+text.slice(0,80), null);
+    if(window.createNotification) window.createNotification((typeof OWNER_EMAIL !== 'undefined' && OWNER_EMAIL) || 'laura1525cristina@gmail.com', 'comment', ''+authorName+' (cliente) comentou no processo: '+text.slice(0,80), null);
   }, function(){});
 };
 
@@ -7438,9 +7438,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
   /* ── 2. Se Supabase deu erro específico, mostra e para ── */
   if(!_sbLoginOk && _sbErrMsg){ _showErr(_sbErrMsg); return; }
 
-  /* ── 3. Se Supabase autenticou, resolve o role e entra ── */
+  /* ── 3. Se Supabase autenticou, resolve o role e entra ──
+     Fix: essas duas linhas liam ADMIN_EMAIL diretamente, mas essa constante
+     é declarada num <script> diferente (mais abaixo no arquivo) — bare
+     reference daqui dava "ADMIN_EMAIL is not defined" (ReferenceError) toda
+     vez que o login com Supabase dava certo, travando o botão "Entrando..."
+     pra sempre sem nenhum erro visível. Troquei pelo OWNER_EMAIL, que já é
+     resolvido com segurança logo acima nesse mesmo script (com o guard
+     typeof) e tem o mesmo valor. */
   if(_sbLoginOk){
-    var _sbRole = (email === (ADMIN_EMAIL||'').toLowerCase()) ? 'admin' : 'edit';
+    var _sbRole = (email === OWNER_EMAIL) ? 'admin' : 'edit';
     /* verifica se tem role registrado localmente */
     try{
       var _adm = _getAdmUsers();
@@ -7448,7 +7455,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
       if(_admu && _admu.role) _sbRole = _admu.role;
     }catch(ex){}
     /* garante que é admin se for o e-mail mestre */
-    if(email === (ADMIN_EMAIL||'laura1525cristina@gmail.com').toLowerCase()) _sbRole = 'admin';
+    if(email === OWNER_EMAIL) _sbRole = 'admin';
     /* sincroniza hash local para login offline futuro */
     try{
       var _adm2 = _getAdmUsers();
