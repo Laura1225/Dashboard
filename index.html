@@ -10390,24 +10390,31 @@ window._equipeApprove = async function(id){
   }catch(ex){}
   renderEquipeView();
 };
+/* Fix: recusar/remover antes só marcava status:'rejected' — a pessoa sumia
+   das duas listas (não é 'pending' nem 'approved') e ficava travada pra
+   sempre, sem a administradora conseguir ver ou reconsiderar, e sem a
+   pessoa conseguir pedir acesso de novo. Agora apaga a linha de verdade:
+   se ela tentar entrar de novo (a senha dela continua existindo no
+   Supabase, só o painel do Supabase apaga isso), o app recria um pedido
+   novo em "Aguardando aprovação" do zero, como se fosse a primeira vez. */
 window._equipeReject = async function(id){
   if(!window._sb) return;
   var _doReject = async function(){
-    try{ await window._sb.from('team_profiles').update({ status:'rejected' }).eq('id', id); }catch(ex){}
+    try{ await window._sb.from('team_profiles').delete().eq('id', id); }catch(ex){}
     renderEquipeView();
   };
   if(typeof showConfirm === 'function'){
-    showConfirm('Recusar cadastro', 'A pessoa não vai conseguir entrar. A conta de e-mail em si só pode ser apagada pelo painel do Supabase, se você quiser.', _doReject);
+    showConfirm('Recusar cadastro', 'O pedido é apagado. Se ela tentar entrar de novo, o pedido aparece aqui em "Aguardando aprovação" outra vez, como um pedido novo.', _doReject);
   } else { _doReject(); }
 };
 window._equipeRemove = async function(id){
   if(!window._sb) return;
   var _doRemove = async function(){
-    try{ await window._sb.from('team_profiles').update({ status:'rejected' }).eq('id', id); }catch(ex){}
+    try{ await window._sb.from('team_profiles').delete().eq('id', id); }catch(ex){}
     renderEquipeView();
   };
   if(typeof showConfirm === 'function'){
-    showConfirm('Remover acesso', 'Essa pessoa não vai mais conseguir entrar no painel.', _doRemove);
+    showConfirm('Remover acesso', 'Essa pessoa perde o acesso agora. Se ela tentar entrar de novo, vira um pedido novo em "Aguardando aprovação".', _doRemove);
   } else { _doRemove(); }
 };
 window._equipeChangeRole = async function(id, role){
