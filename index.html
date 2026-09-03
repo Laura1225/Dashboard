@@ -387,10 +387,6 @@
   .sb-mini-logo img{
     width:100%; height:100%; object-fit:contain; display:block;
   }
-  /* modo escuro: emblema com fundo claro (logo sozinha, invertida);
-     modo claro: mantém o fundo preto original do emblema */
-  html:not([data-theme="light"]) .sb-mini-logo img{ filter:invert(1) brightness(1.06); }
-  html[data-theme="light"] .sb-mini-logo img{ filter:none; }
 
   /* ── SIDEBAR TOGGLE BUTTON ── */
   .sb-toggle{
@@ -715,7 +711,7 @@
   .table-head h3{ font-size:14.5px; font-weight:700; margin:0; }
   .table-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .search-input{ background:var(--card-2); border:1px solid var(--border); border-radius:999px; padding:9px 15px; font-size:12px; color:var(--text); outline:none; width:180px; font-family:'Manrope',sans-serif; }
-  .add-btn{ background:var(--grad-red); box-shadow:var(--glow-red); color:#fff; border:none; border-radius:999px; padding:9px 17px; font-size:12px; font-weight:700; cursor:pointer; }
+  .add-btn{ background:var(--grad-red); box-shadow:var(--glow-red); color:#fff; border:none; border-radius:999px; padding:9px 17px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
   .add-btn:hover{ filter:brightness(1.1); box-shadow:var(--glow-red-lg); }
   .filter-row{ display:flex; gap:8px; padding:14px 22px 0; flex-wrap:wrap; }
   .f-chip{ padding:7px 14px; border-radius:999px; font-size:11px; font-weight:600; color:var(--text-dim); background:var(--card-2); border:1px solid var(--border); cursor:pointer; }
@@ -1140,7 +1136,7 @@
     .sidebar{ width:100%; height:auto; flex-direction:row; align-items:center; border-right:none; border-bottom:1px solid var(--border); padding:calc(12px + env(safe-area-inset-top)) 16px 12px; gap:12px; overflow:visible; position:fixed; top:0; left:0; right:0; z-index:50; box-shadow:0 2px 14px rgba(0,0,0,.18); }
     .brand{ border-bottom:none; padding:0; }
     .brand img{ width:100px; }
-    nav{ flex-direction:row; overflow-x:auto; overflow-y:hidden; flex:1; padding-bottom:4px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    nav{ flex-direction:row; overflow-x:auto; overflow-y:hidden; flex:1; padding-bottom:4px; -webkit-overflow-scrolling:touch; scrollbar-width:none; -webkit-mask-image:linear-gradient(to right, black 88%, transparent 100%); mask-image:linear-gradient(to right, black 88%, transparent 100%); }
     nav::-webkit-scrollbar{ display:none; }
     .nav-item{ flex-shrink:0; padding:8px 12px; font-size:12.5px; white-space:nowrap; overflow:visible; }
     .nav-item span{ overflow:visible; text-overflow:clip; }
@@ -1862,7 +1858,7 @@
 
 /* ── View Toggle ── */
 .view-toggle-group { display:flex; gap:2px; background:rgba(255,255,255,.06); border-radius:10px; padding:3px; border:1px solid var(--border); }
-.view-toggle-btn { display:flex; align-items:center; gap:5px; background:transparent; border:none; color:var(--text-muted,#888); font-size:12px; font-weight:500; padding:5px 10px; border-radius:7px; cursor:pointer; transition:all .15s; font-family:inherit; }
+.view-toggle-btn { display:flex; align-items:center; gap:5px; background:transparent; border:none; color:var(--text-muted,#888); font-size:12px; font-weight:500; padding:5px 10px; border-radius:7px; cursor:pointer; transition:all .15s; font-family:inherit; white-space:nowrap; flex-shrink:0; }
 .view-toggle-btn:hover { color:var(--text); background:rgba(255,255,255,.08); }
 .view-toggle-btn.active { background:rgba(255,255,255,.12); color:var(--text); font-weight:600; }
 html[data-theme="light"] .view-toggle-group { background:rgba(0,0,0,.04); }
@@ -1927,7 +1923,7 @@ html[data-theme="light"] .cal-no-date-title { color:var(--text-dimmer); }
 /* ========== KANBAN / DEMANDAS ========== */
 #section-demandas { display:none; flex-direction:column; }
 #section-demandas.active { display:flex; }
-.kanban-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-shrink:0; }
+.kanban-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-shrink:0; flex-wrap:wrap; gap:10px; }
 .kanban-board { display:flex; flex-direction:row; align-items:flex-start; gap:12px; overflow-x:auto; padding-bottom:20px; cursor:grab; user-select:none; }
 .kanban-board.is-dragging { cursor:grabbing; }
 .kanban-board::-webkit-scrollbar { height:6px; }
@@ -2834,8 +2830,17 @@ input[type="time"]::-webkit-calendar-picker-indicator { filter:invert(.6); curso
 .chat-msg.sent .chat-bubble { background:linear-gradient(135deg,#FF5470,#FF0A33); color:#fff; border-bottom-right-radius:4px; }
 .chat-msg.recv .chat-bubble { background:var(--surface); border:1px solid var(--border); color:var(--text); border-bottom-left-radius:4px; }
 .chat-bubble .chat-mention { font-weight:700; opacity:.85; }
-.chat-msg-meta { font-size:10px; color:var(--text-dim); margin-top:3px; }
+.chat-msg-meta { font-size:10px; color:var(--text-dim); margin-top:3px; display:flex; align-items:center; gap:6px; }
 .chat-msg-sender { font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:3px; }
+.chat-msg-edited { font-style:italic; opacity:.8; }
+.chat-msg-deleted { font-style:italic; opacity:.7; }
+.chat-msg-action { background:transparent; border:none; cursor:pointer; padding:0; font-size:11px; line-height:1; opacity:.55; transition:opacity .15s; }
+.chat-msg-action:hover { opacity:1; }
+.chat-edit-input { width:100%; min-width:160px; background:rgba(0,0,0,.15); border:1px solid rgba(255,255,255,.25); border-radius:8px; color:inherit; font:inherit; padding:6px 8px; resize:vertical; outline:none; }
+.chat-edit-actions { display:flex; gap:8px; margin-top:6px; }
+.chat-edit-save, .chat-edit-cancel { font-size:11px; font-weight:700; border:none; border-radius:6px; padding:4px 10px; cursor:pointer; font-family:inherit; }
+.chat-edit-save { background:rgba(255,255,255,.22); color:inherit; }
+.chat-edit-cancel { background:transparent; color:inherit; opacity:.75; }
 .chat-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-dim); }
 .chat-empty-icon { font-size:36px; }
 .chat-empty-msg { font-size:13px; text-align:center; }
@@ -4257,7 +4262,18 @@ const saveThemePref = (v) => save(KEYS.theme, { value:v });
 const saveTeam = () => save(KEYS.team, teamAccounts);
 const saveLeads = () => save(KEYS.leads, leads);
 const saveArchive = () => save(KEYS.archive, archive);
-const saveAvatarPref = (dataUrl) => save(KEYS.avatar, { dataUrl });
+const saveAvatarPref = (dataUrl) => {
+  /* Além de guardar no armazenamento privado (compatibilidade), grava a foto
+     também em team_profiles.avatar_url — assim ela aparece pra QUALQUER pessoa
+     (Equipe, Chat, seletor de responsável nas Demandas), não só no meu aparelho. */
+  try{
+    if(window._sb && _sbUserId){
+      window._sb.from('team_profiles').update({ avatar_url: dataUrl }).eq('id', _sbUserId)
+        .then(function(r){ if(r&&r.error) console.error('[avatar] falha ao sincronizar foto:', r.error); else { try{ _refreshTeamRoster(); }catch(ex){} } });
+    }
+  }catch(ex){}
+  return save(KEYS.avatar, { dataUrl });
+};
 const saveHistory = () => save(KEYS.history, activityLog);
 const saveFolders = () => {
   save(KEYS.folders, clientFolders);
@@ -4772,6 +4788,7 @@ window._procSetQuickLink = function(folderId, key){
   });
 };
 window._procRemoveQuickLink = function(folderId, key, itemId){
+  if(!_requireAdminToDelete()) return;
   var folder = clientFolders.find(function(f){ return f.id === folderId; });
   if(!folder || !folder.quickLinks || !Array.isArray(folder.quickLinks[key])) return;
   folder.quickLinks[key] = folder.quickLinks[key].filter(function(it){ return it.id !== itemId; });
@@ -4837,6 +4854,7 @@ window._procDownloadQuickFile = function(folderId, fileId){
   }catch(ex){ if(typeof showToast==='function') showToast('Não foi possível baixar o arquivo.'); }
 };
 window._procDeleteQuickFile = function(folderId, fileId){
+  if(!_requireAdminToDelete()) return;
   var folder = clientFolders.find(function(f){ return f.id === folderId; });
   if(!folder || !Array.isArray(folder.quickFiles)) return;
   folder.quickFiles = folder.quickFiles.filter(function(f){ return f.id !== fileId; });
@@ -4916,6 +4934,7 @@ window._pastaAddFolder = function(){
 
 /* ── Excluir item de uma pasta ── */
 window._pastaDeleteItem = function(folderId, itemId){
+  if(!_requireAdminToDelete()) return;
   var folder = clientFolders.find(function(f){ return f.id === folderId; });
   if(!folder) return;
   var it = (folder.projects||[]).find(function(p){ return p.id === itemId; });
@@ -5205,6 +5224,7 @@ window.renamePasta = renamePasta;
 
 /* ── Pasta delete ── */
 function deletePasta(folderId){
+  if(!_requireAdminToDelete()) return;
   var folder = clientFolders.find(function(f){ return f.id === folderId; });
   if(!folder) return;
   var msg = (folder.projects.length > 0 ? folder.projects.length + ' item(ns) desse processo também serão removidos. ' : '')
@@ -6291,16 +6311,26 @@ async function _pullAdmUsersFromCloud(){
 const COLLAB_HIDDEN_SECTIONS = ['clientes','crm','financeiro','arquivos','pastas'];
 
 var CLIENT_ONLY_SECTION = 'pastas';
+/* Cargo "Cliente": por padrão só o Dashboard inicial + a aba Processos (a
+   pasta vinculada a ele) aparecem. Se a administradora marcou permissões
+   específicas pra esse cliente (mesma caixinha usada pros colaboradores),
+   essa escolha manda em tudo, EXCETO o Chat — cliente nunca, em hipótese
+   nenhuma, tem acesso ao Chat, mesmo que a caixinha marque isso por engano. */
 function applyClientRoleRestrictions(){
-  /* Cargo "Cliente": só a aba Processos aparece, mais nada — nem Dashboard,
-     nem Demandas, nem Chat, nem Equipe/Configurações. */
+  var perms = Array.isArray(window.currentUserPermissions) ? window.currentUserPermissions : null;
   document.querySelectorAll('#mainNav .nav-item').forEach(function(nav){
-    var isOnly = nav.getAttribute('data-section') === CLIENT_ONLY_SECTION;
-    nav.style.display = isOnly ? '' : 'none';
+    var key = nav.getAttribute('data-section');
+    if(key === 'dashboard'){ nav.style.display=''; return; }
+    if(key === 'chat'){ nav.style.display='none'; return; }
+    var allowed = perms ? (perms.indexOf(key) !== -1) : (key === CLIENT_ONLY_SECTION);
+    nav.style.display = allowed ? '' : 'none';
   });
   document.querySelectorAll('.section').forEach(function(sec){
-    var isOnly = sec.id === 'section-' + CLIENT_ONLY_SECTION;
-    if(!isOnly) sec.style.display = 'none';
+    var key = sec.id.replace(/^section-/, '');
+    if(key === 'dashboard'){ sec.style.display=''; return; }
+    if(key === 'chat'){ sec.style.display='none'; return; }
+    var allowed = perms ? (perms.indexOf(key) !== -1) : (key === CLIENT_ONLY_SECTION);
+    sec.style.display = allowed ? '' : 'none';
   });
   var eqBtn = document.getElementById('navEquipe');
   if(eqBtn) eqBtn.style.display = 'none';
@@ -6740,7 +6770,7 @@ window.renderCollabDashboard = renderCollabDashboard;
      mensagens nunca se encontrariam. Normalizando aqui isso nunca mais importa. */
   function _lc(s){ return (s||'').toLowerCase(); }
   function _rowToMsg(row){
-    return { id:row.id, from:row.from_email, fromName:row.from_name, to:row.to_email, text:row.body, mentions:row.mentions||[], ts:Number(row.ts) };
+    return { id:row.id, from:row.from_email, fromName:row.from_name, to:row.to_email, text:row.body, mentions:row.mentions||[], ts:Number(row.ts), deleted:!!row.deleted, editedAt: row.edited_at ? new Date(row.edited_at).getTime() : null };
   }
   function _msgToRow(msg){
     return { id:msg.id, from_email:_lc(msg.from), to_email:_lc(msg.to), from_name:msg.fromName||null, body:msg.text||'', mentions:msg.mentions||[], ts:msg.ts };
@@ -6752,6 +6782,16 @@ window.renderCollabDashboard = renderCollabDashboard;
       var r = await window._sb.from('chat_messages').upsert(_msgToRow(msg), { onConflict:'id' });
       if(r&&r.error) console.error('[chat] falha ao salvar mensagem na nuvem:', r.error);
     }catch(e){ console.error('[chat] exceção ao salvar mensagem na nuvem:', e); }
+  }
+  /* Atualiza uma mensagem já existente (edição de texto ou apagar) — só funciona
+     pra mensagem que EU mesmo enviei, a regra do banco (RLS) garante isso também. */
+  async function _cloudUpdateMsg(msg){
+    if(!window._sb||!window.currentUser) return;
+    try{
+      var patch={ body: msg.text||'', deleted: !!msg.deleted, edited_at: msg.editedAt ? new Date(msg.editedAt).toISOString() : null };
+      var r = await window._sb.from('chat_messages').update(patch).eq('id', msg.id);
+      if(r&&r.error) console.error('[chat] falha ao editar/apagar mensagem na nuvem:', r.error);
+    }catch(e){ console.error('[chat] exceção ao editar/apagar mensagem na nuvem:', e); }
   }
   /* Mantém a mesma assinatura antiga (partner, msgs[]) usada pelo resto do código:
      só manda pro banco as mensagens que ainda não foram salvas nesta sessão. */
@@ -6800,8 +6840,13 @@ window.renderCollabDashboard = renderCollabDashboard;
 
   /* ── merge & persist ── */
   function _merge(a,b){
-    var seen={}, out=[];
-    (a||[]).concat(b||[]).forEach(function(m){ if(!seen[m.id]){ seen[m.id]=true; out.push(m); } });
+    /* "b" é a fonte mais fresca (nuvem/sincronização) — quando o mesmo id existe
+       nos dois lados, o texto/edição/apagar de "b" prevalece, senão uma edição
+       ou um "apagar" feito em outro aparelho nunca chegaria aqui. */
+    var byId={}, order=[];
+    (a||[]).forEach(function(m){ if(!byId[m.id]){ byId[m.id]=m; order.push(m.id); } });
+    (b||[]).forEach(function(m){ if(!byId[m.id]) order.push(m.id); byId[m.id]=m; });
+    var out=order.map(function(id){ return byId[id]; });
     out.sort(function(x,y){ return x.ts-y.ts; });
     return out;
   }
@@ -6851,10 +6896,17 @@ window.renderCollabDashboard = renderCollabDashboard;
         lastDate=d;
       }
       var sent=(m.from||'').toLowerCase()===me;
+      var bubbleInner = m.deleted
+        ? '<span class="chat-msg-deleted">Mensagem apagada</span>'
+        : _hl(m.text||'');
+      var actions = (sent && !m.deleted)
+        ? '<button class="chat-msg-action" title="Editar" onclick="_chatStartEdit(\''+m.id+'\')">✏️</button>'
+          +'<button class="chat-msg-action" title="Apagar" onclick="_chatDeleteMsg(\''+m.id+'\')">🗑</button>'
+        : '';
       html+='<div class="chat-msg '+(sent?'sent':'recv')+'">'
         +(sent?'':'<div class="chat-msg-sender">'+escapeHtml(m.fromName||m.from||'')+'</div>')
-        +'<div class="chat-bubble">'+_hl(m.text||'')+'</div>'
-        +'<div class="chat-msg-meta">'+_fmtTime(m.ts||0)+'</div>'
+        +'<div class="chat-bubble" data-id="'+m.id+'">'+bubbleInner+'</div>'
+        +'<div class="chat-msg-meta">'+_fmtTime(m.ts||0)+(m.editedAt&&!m.deleted?' <span class="chat-msg-edited">(editado)</span>':'')+actions+'</div>'
         +'</div>';
     });
     el.innerHTML=html;
@@ -6872,8 +6924,9 @@ window.renderCollabDashboard = renderCollabDashboard;
     if(area) area.style.display='flex';
     var av=document.getElementById('chatHeaderAvatar');
     var nm=document.getElementById('chatHeaderName');
-    if(av) av.textContent=_initial(partnerEmail);
-    if(nm) nm.textContent=partnerName||_chatNameFor(partnerEmail)||partnerEmail;
+    var resolvedName=partnerName||_chatNameFor(partnerEmail)||partnerEmail;
+    if(av) av.innerHTML=_buildAvatarHtml(partnerEmail, resolvedName, 36);
+    if(nm) nm.textContent=resolvedName;
     _renderMsgs(partnerEmail);
     document.querySelectorAll('.chat-conv-item').forEach(function(el){
       el.classList.toggle('active',el.dataset.email===partnerEmail);
@@ -6906,7 +6959,7 @@ window.renderCollabDashboard = renderCollabDashboard;
       var preview=msgs.length?(msgs[msgs.length-1].text||'').slice(0,38):'Sem mensagens';
       return '<div class="chat-conv-item'+(email===_chatPartner?' active':'')
         +'" data-email="'+escapeHtml(email)+'" data-name="'+escapeHtml(name)+'" onclick="_chatOpenConvFromSidebar(this)">'
-        +'<div class="chat-conv-avatar">'+_initial(email)+'</div>'
+        +'<div class="chat-conv-avatar">'+_buildAvatarHtml(email,name,32)+'</div>'
         +'<div class="chat-conv-info">'
           +'<div class="chat-conv-name">'+escapeHtml(name)+'</div>'
           +'<div class="chat-conv-preview">'+escapeHtml(preview)+'</div>'
@@ -7002,6 +7055,91 @@ window.renderCollabDashboard = renderCollabDashboard;
     }
   }
 
+  /* ── editar / apagar mensagem enviada (estilo WhatsApp/Instagram) ── */
+  function _chatStartEdit(id){
+    if(!_chatPartner) return;
+    var msgs=_lsLoad(_chatPartner);
+    var m=msgs.find(function(x){ return x.id===id; });
+    if(!m||m.deleted) return;
+    var bubbleEl=document.querySelector('.chat-bubble[data-id="'+id+'"]');
+    if(!bubbleEl) return;
+    bubbleEl.innerHTML='<textarea class="chat-edit-input">'+escapeHtml(m.text||'')+'</textarea>'
+      +'<div class="chat-edit-actions">'
+      +'<button type="button" class="chat-edit-save">Salvar</button>'
+      +'<button type="button" class="chat-edit-cancel">Cancelar</button>'
+      +'</div>';
+    var ta=bubbleEl.querySelector('.chat-edit-input');
+    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.addEventListener('keydown', function(e){
+      if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); bubbleEl.querySelector('.chat-edit-save').click(); }
+      if(e.key==='Escape'){ _renderMsgs(_chatPartner); }
+    });
+    bubbleEl.querySelector('.chat-edit-save').onclick=function(){
+      var val=ta.value.trim();
+      if(!val) return;
+      _chatApplyEdit(id, val);
+    };
+    bubbleEl.querySelector('.chat-edit-cancel').onclick=function(){ _renderMsgs(_chatPartner); };
+  }
+  window._chatStartEdit=_chatStartEdit;
+
+  function _chatApplyEdit(id, text){
+    var partner=_chatPartner; if(!partner) return;
+    var msgs=_lsLoad(partner);
+    var m=msgs.find(function(x){ return x.id===id; });
+    if(!m) return;
+    m.text=text; m.editedAt=Date.now();
+    _lsSave(partner, msgs);
+    _renderMsgs(partner);
+    _cloudUpdateMsg(m);
+    if(_chatChannel){
+      _chatChannel.send({ type:'broadcast', event:'message-edit', payload:{ id:id, to:m.to, from:window.currentUser||'', text:text, editedAt:m.editedAt } });
+    }
+  }
+  window._chatApplyEdit=_chatApplyEdit;
+
+  function _chatDeleteMsg(id){
+    var partner=_chatPartner; if(!partner) return;
+    if(!confirm('Apagar esta mensagem?')) return;
+    var msgs=_lsLoad(partner);
+    var m=msgs.find(function(x){ return x.id===id; });
+    if(!m) return;
+    m.deleted=true; m.text='';
+    _lsSave(partner, msgs);
+    _renderMsgs(partner);
+    _cloudUpdateMsg(m);
+    if(_chatChannel){
+      _chatChannel.send({ type:'broadcast', event:'message-delete', payload:{ id:id, to:m.to, from:window.currentUser||'' } });
+    }
+  }
+  window._chatDeleteMsg=_chatDeleteMsg;
+
+  /* ── recebe edição/apagar feito pela outra pessoa ── */
+  function _handleMsgEdit(payload){
+    var me=(window.currentUser||'').toLowerCase();
+    var from=(payload.from||'').toLowerCase();
+    var to=(payload.to||'').toLowerCase();
+    if(to!==me) return;
+    var msgs=_lsLoad(from);
+    var m=msgs.find(function(x){ return x.id===payload.id; });
+    if(!m) return;
+    m.text=payload.text; m.editedAt=payload.editedAt;
+    _lsSave(from, msgs);
+    if(_chatActive&&_chatPartner&&_chatPartner.toLowerCase()===from) _renderMsgs(_chatPartner);
+  }
+  function _handleMsgDelete(payload){
+    var me=(window.currentUser||'').toLowerCase();
+    var from=(payload.from||'').toLowerCase();
+    var to=(payload.to||'').toLowerCase();
+    if(to!==me) return;
+    var msgs=_lsLoad(from);
+    var m=msgs.find(function(x){ return x.id===payload.id; });
+    if(!m) return;
+    m.deleted=true; m.text='';
+    _lsSave(from, msgs);
+    if(_chatActive&&_chatPartner&&_chatPartner.toLowerCase()===from) _renderMsgs(_chatPartner);
+  }
+
   /* ── data sync: admin broadcasts client/task list to collaborators ── */
   function _handleDataSync(payload){
     var key=payload.key; var data=payload.data;
@@ -7049,6 +7187,8 @@ window.renderCollabDashboard = renderCollabDashboard;
     _chatChannel=window._sb.channel('lumem-chat-v1',{ config:{ broadcast:{ self:false } } });
     _chatChannel
       .on('broadcast',{event:'message'},   function(p){ _receive(p.payload||p); })
+      .on('broadcast',{event:'message-edit'},   function(p){ _handleMsgEdit(p.payload||p); })
+      .on('broadcast',{event:'message-delete'}, function(p){ _handleMsgDelete(p.payload||p); })
       .on('broadcast',{event:'sync-req'},  function(p){ _handleSyncReq(p.payload||p); })
       .on('broadcast',{event:'sync-res'},  function(p){ _handleSyncRes(p.payload||p); })
       .on('broadcast',{event:'data-sync'}, function(p){ _handleDataSync(p.payload||p); })
@@ -7066,6 +7206,9 @@ window.renderCollabDashboard = renderCollabDashboard;
     var sidebar=document.getElementById('chatSidebarAdmin');
     var prompt=document.getElementById('chatSelectPrompt');
     var area=document.getElementById('chatConvArea');
+
+    /* Sempre busca o nome e a foto mais recentes de todo mundo ao abrir o Chat */
+    try{ _refreshTeamRoster().then(function(){ _renderSidebar(); if(_chatPartner) _openConv(_chatPartner,''); }); }catch(ex){}
 
     if(sidebar) sidebar.style.display='flex';
     /* Load ALL cloud histories on first open — agrupadas por parceiro */
@@ -7489,6 +7632,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
   };
 
   var authEmail = null, authRole = null;
+  var _sbProfileRole = null; /* cargo de verdade, vindo do banco (team_profiles), preenchido no passo 1.5 */
 
   /* ── 1. Tenta Supabase primeiro ── */
   var _sbLoginOk = false;
@@ -7543,6 +7687,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
         return;
       }
       _authCacheApprovedProfile(email, _chk15.profile);
+      /* Fix: o cargo REAL de quem acabou de logar é o que está salvo no banco
+         (team_profiles.role) — se a gente confiar só no cache local (roster
+         salvo neste aparelho), qualquer pessoa entrando PELA PRIMEIRA VEZ
+         num aparelho novo (ex: um cliente recém-criado) caía num cargo
+         padrão errado ("edit"), enxergando abas que não devia (Chat,
+         Demandas, Dashboard inteiro) e não enxergando a que devia (Processos). */
+      _sbProfileRole = (_chk15.profile && _chk15.profile.role) || null;
     }catch(exChk){
       /* timeout ou erro de rede na checagem de aprovação — NUNCA deixa entrar
          sem confirmar; mostra erro claro e libera o botão pra tentar de novo. */
@@ -7572,6 +7723,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
       var _admu = _adm.find(function(u){ return (u.email||'').toLowerCase() === email; });
       if(_admu && _admu.role) _sbRole = _admu.role;
     }catch(ex){}
+    /* Fix: o cargo salvo no BANCO (lido agora mesmo no passo 1.5) é sempre a
+       fonte da verdade — prevalece sobre o cache local, que pode não existir
+       ainda (primeiro login desse aparelho) ou estar desatualizado. Sem isso,
+       um cliente recém-criado entrava como "edit" (colaborador) na primeira
+       vez, vendo abas que não devia (Chat, Demandas etc). */
+    if(_sbProfileRole) _sbRole = _sbProfileRole;
     /* garante que é admin se for o e-mail mestre */
     if(email === OWNER_EMAIL) _sbRole = 'admin';
     /* sincroniza hash local para login offline futuro */
@@ -8132,6 +8289,7 @@ document.getElementById('ctxDuplicate').addEventListener('click', ()=>{
 });
 document.getElementById('ctxDelete').addEventListener('click', ()=>{
   const { type, id } = _ctxTarget;
+  if(type!=='lead' && !_requireAdminToDelete()) return;
   if(type==='client') deleteClient(id);
   else if(type==='expense') deleteExpense(id);
   else if(type==='portfolio'){ const it=portfolioItems.find(i=>i.id===id); if(it){ showConfirm('Excluir "'+it.name+'"?','Esta ação não pode ser desfeita.',async()=>{ portfolioItems=portfolioItems.filter(i=>i.id!==id); await savePortfolio(); logActivity('🗑️','portfolio','Projeto removido',it.name||''); renderPortfolio(); }); } }
@@ -8456,6 +8614,7 @@ function renderPortfolio(){
   }));
   el.querySelectorAll('[data-delport]').forEach(btn => btn.addEventListener('click', e => {
     e.stopPropagation();
+    if(!_requireAdminToDelete()) return;
     const id = btn.dataset.delport;
     const it = portfolioItems.find(i=>i.id===id);
     showConfirm('Excluir "' + (it?.name||'projeto') + '"?', 'Essa ação não pode ser desfeita.', async () => {
@@ -8617,6 +8776,7 @@ function renderPropostas(){
   }));
   el.querySelectorAll('[data-editprop]').forEach(btn=>btn.addEventListener('click', ()=>openPropostaAdd(btn.dataset.editprop)));
   el.querySelectorAll('[data-delprop]').forEach(btn=>btn.addEventListener('click', ()=>{
+    if(!_requireAdminToDelete()) return;
     showConfirm('Excluir proposta?', 'Essa ação não pode ser desfeita.', async () => {
       const _delProp = proposals.find(p=>p.id===btn.dataset.delprop);
       proposals = proposals.filter(p=>p.id!==btn.dataset.delprop);
@@ -8737,6 +8897,7 @@ function renderBriefingsLinks(){
   }));
   el.querySelectorAll('[data-editbrief]').forEach(btn=>btn.addEventListener('click', ()=>openBriefingAdd(btn.dataset.editbrief)));
   el.querySelectorAll('[data-delbrief]').forEach(btn=>btn.addEventListener('click', ()=>{
+    if(!_requireAdminToDelete()) return;
     showConfirm('Excluir briefing?', 'Essa ação não pode ser desfeita.', async () => {
       const _delBf = briefings.find(x=>x.id===btn.dataset.delbrief);
       briefings = briefings.filter(x=>x.id!==btn.dataset.delbrief);
@@ -8865,6 +9026,7 @@ function renderPdfGrid(key, data, gridId){
   });
   el.querySelectorAll('[data-editpdf]').forEach(btn=>btn.addEventListener('click', ()=>openPdfAdd(btn.dataset.pdfkey, btn.dataset.editpdf)));
   el.querySelectorAll('[data-delpdf]').forEach(btn=>btn.addEventListener('click', ()=>{
+    if(!_requireAdminToDelete()) return;
     showConfirm('Excluir arquivo?', 'Essa ação não pode ser desfeita.', async () => {
       const _delCt = contracts.find(x=>x.id===btn.dataset.delpdf);
       contracts=contracts.filter(x=>x.id!==btn.dataset.delpdf);
@@ -9207,6 +9369,17 @@ document.getElementById('settingsForm').addEventListener('submit', async (e)=>{
     });
     try{ localStorage.setItem('lumem:adm:users', JSON.stringify(updN)); _pushAdmUsersToCloud(updN); }catch(ex){}
   }
+  /* IMPORTANTE: o passo acima só salva no MEU armazenamento privado — grava
+     também em team_profiles.name (compartilhado) pra esse nome aparecer pra
+     todo mundo, por exemplo no Chat de quem me chama de mensagem. */
+  if(newName){
+    try{
+      if(window._sb && _sbUserId){
+        window._sb.from('team_profiles').update({ name: newName }).eq('id', _sbUserId)
+          .then(function(r){ if(r&&r.error) console.error('[perfil] falha ao sincronizar nome:', r.error); else { try{ _refreshTeamRoster(); }catch(ex){} } });
+      }
+    }catch(ex){}
+  }
 
   okEl.textContent = '✓ Alterações salvas com sucesso!';
   logActivity('<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#fff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\' style=\'width:16px;height:16px;\'><circle cx=\'12\' cy=\'12\' r=\'3\'/><path d=\'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z\'/></svg>', 'configuracoes', 'Configurações salvas', newPassword ? 'incluindo nova senha' : 'perfil atualizado');
@@ -9356,6 +9529,7 @@ function renderCRM(){
   }));
   board.querySelectorAll('[data-clearstatus]').forEach(el=> el.addEventListener('click', (e)=>{
     e.stopPropagation();
+    if(!_requireAdminToDelete()) return;
     const status = el.dataset.clearstatus;
     const col = leads.filter(l=>l.status===status);
     if(!col.length) return;
@@ -9550,6 +9724,7 @@ window.restoreArchiveItem = async function(i){
   renderArchive();
 };
 window.permanentDeleteArchiveItem = function(i){
+  if(!_requireAdminToDelete()) return;
   showConfirm('Excluir permanentemente?', 'Essa ação não pode ser desfeita.', async () => {
     archive.splice(i,1);
     await saveArchive();
@@ -10234,6 +10409,15 @@ function saveDemandTasks(){
 
 /* ── Helpers ── */
 function isAdmin(){ return (window.currentUser||'').toLowerCase() === ADMIN_EMAIL.toLowerCase(); }
+/* Colaborador pode editar e mover à vontade, mas EXCLUIR (apagar de vez) é só
+   da administradora — em qualquer parte do sistema. Chama isso no início de
+   toda função que apaga algo; se não for admin, avisa e cancela a ação. */
+function _requireAdminToDelete(){
+  if(isAdmin()) return true;
+  try{ showToast('Apenas a administradora pode excluir. Você pode editar e mover normalmente.', 'error'); }
+  catch(ex){ try{ alert('Apenas a administradora pode excluir.'); }catch(ex2){} }
+  return false;
+}
 function isClientRole(){ return window.currentRole === 'client'; }
 window.isClientRole = isClientRole;
 function uid(){ return 'dt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
@@ -10984,6 +11168,7 @@ function _colQuickAdd(colId){
 }
 
 function _demandQuickDelete(taskId){
+  if(!_requireAdminToDelete()) return;
   const task = demandTasks.find(t=>t.id===taskId); if(!task) return;
   showConfirm('Excluir "'+escapeHtml(task.title||'demanda')+'"?', 'Esta ação não pode ser desfeita.', ()=>{
     demandTasks = demandTasks.filter(t=>t.id!==taskId);
@@ -11850,6 +12035,7 @@ function _tpDownloadFile(fileId){
 }
 window._tpDownloadFile = _tpDownloadFile;
 function _tpDeleteFile(fileId){
+  if(!_requireAdminToDelete()) return;
   if(!_tpTaskId) return;
   var task = demandTasks.find(function(t){ return t.id === _tpTaskId; });
   if(!task || !Array.isArray(task.files)) return;
@@ -12032,6 +12218,7 @@ function _tpToggleChecklistItem(itemId){
   renderKanban();
 }
 function _tpDeleteChecklistItem(itemId){
+  if(!_requireAdminToDelete()) return;
   if(!_tpTaskId) return;
   var task = demandTasks.find(function(t){ return t.id === _tpTaskId; });
   if(!task||!task.checklist) return;
@@ -12166,6 +12353,7 @@ function _tpAddComment(){
   }catch(ex){}
 }
 function _tpDeleteComment(commentId){
+  if(!_requireAdminToDelete()) return;
   if(!_tpTaskId) return;
   var task = demandTasks.find(function(t){ return t.id === _tpTaskId; });
   if(!task||!task.comments) return;
@@ -12245,6 +12433,7 @@ window._tpRemoveCover = _tpRemoveCover;
 
 /* ─── Delete task from panel ─── */
 function _tpDeleteTask(){
+  if(!_requireAdminToDelete()) return;
   if(!_tpTaskId) return;
   var _delTitle = (demandTasks.find(function(t){ return t.id===_tpTaskId; })||{}).title||'';
   showConfirm('Excluir demanda?', 'Essa ação não pode ser desfeita.', function(){
@@ -12885,6 +13074,7 @@ function _saveDemand(){
 }
 
 function _deleteDemand(){
+  if(!_requireAdminToDelete()) return;
   if(!_editingTaskId) return;
   var _delTaskTitle = (demandTasks.find(t => t.id === _editingTaskId)||{}).title || '';
   showConfirm('Excluir demanda?', 'Essa ação não pode ser desfeita.', () => {
@@ -12900,9 +13090,16 @@ function _deleteDemand(){
    EMAIL-BASED ASSIGNEE HELPERS
 ══════════════════════════════════════════════════ */
 
-/** Get stored avatar dataUrl for an email from localStorage */
+/** Get the person's photo: primeiro tenta a foto compartilhada (team_profiles.avatar_url,
+    a mesma que a pessoa escolheu no Dashboard, visível pra todo mundo), e só usa o
+    armazenamento privado do navegador como último recurso (dados antigos/offline). */
 function _getUserAvatarFromLS(email){
   if(!email) return null;
+  try{
+    var roster = Array.isArray(window._teamRoster) ? window._teamRoster : [];
+    var found = roster.find(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
+    if(found && found.avatar_url) return found.avatar_url;
+  }catch(e){}
   try{
     var data = JSON.parse(localStorage.getItem('lumem:u:' + email + ':avatar'));
     return (data && data.dataUrl) ? data.dataUrl : null;
@@ -13315,6 +13512,7 @@ function _colArchiveDirect(colId){
 
 // Delete column directly from board
 function _colDeleteDirect(colId){
+  if(!_requireAdminToDelete()) return;
   var col = COLUMNS.find(function(c){ return c.id === colId; });
   if(!col || col.auto) return;
   showConfirm(
@@ -13497,6 +13695,7 @@ function _colMgrRestore(idx){
   _renderColMgr();
 }
 function _colMgrDelete(idx){
+  if(!_requireAdminToDelete()) return;
   if(!_colMgrDraft[idx] || _colMgrDraft[idx].auto) return;
   var colId   = _colMgrDraft[idx].id;
   var colName = _colMgrDraft[idx].label;
