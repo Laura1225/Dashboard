@@ -7403,11 +7403,18 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
     }
   }
 
-  /* ── 1.5 Gate de aprovação — só entra quem a administradora aprovou ── */
+  /* ── 1.5 Gate de aprovação — só entra quem a administradora aprovou ──
+     Fix: essa checagem não tinha limite de tempo — se a rede/Supabase
+     demorasse (ou nunca respondesse), o botão "Entrando..." ficava
+     travado pra sempre (só um F5 resolvia). Agora tem timeout de 12s:
+     se estourar, mostra erro e NUNCA deixa entrar sem confirmar aprovação. */
   if(_sbLoginOk){
     try{
       var _sess15 = (await window._sb.auth.getSession()).data.session;
-      var _chk15 = await _authCheckApproval(_sess15.user);
+      var _chk15 = await Promise.race([
+        _authCheckApproval(_sess15.user),
+        new Promise(function(_,rj){ setTimeout(function(){ rj(new Error('timeout')); }, 12000); })
+      ]);
       if(!_chk15.ok){
         try{ await window._sb.auth.signOut(); }catch(exSO){}
         _sbLoginOk = false; _sbUserId = null; _fbUid = null;
@@ -7418,7 +7425,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
         return;
       }
       _authCacheApprovedProfile(email, _chk15.profile);
-    }catch(exChk){ /* falha de rede na checagem não derruba o fallback local abaixo */ }
+    }catch(exChk){
+      /* timeout ou erro de rede na checagem de aprovação — NUNCA deixa entrar
+         sem confirmar; mostra erro claro e libera o botão pra tentar de novo. */
+      try{ await window._sb.auth.signOut(); }catch(exSO){}
+      _sbLoginOk = false; _sbUserId = null; _fbUid = null;
+      _showErr('Não foi possível confirmar seu acesso agora. Verifique sua internet e tente novamente.');
+      return;
+    }
   }
 
   /* ── 2. Se Supabase deu erro específico, mostra e para ── */
@@ -7468,6 +7482,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
 
   /* ── 5. Auth ok — entra no dashboard ── */
   try{ _saveCredential(authEmail, pass); }catch(ex){}
+  _lumemMarkFreshLogin(); /* login de verdade agora — reinicia a janela de 24h */
   await new Promise(function(r){ setTimeout(r, 60); });
   if(!_sbLoginOk){ try{ await _fbSignIn(authEmail, pass); }catch(ex){} }
   /* sync em background — sem bloquear entrada */
@@ -7504,10 +7519,39 @@ document.getElementById('btnLogout').addEventListener('click', ()=>{
   document.getElementById('screenLogin').style.display = 'flex';
 });
 
+/* ── Exige login novo a cada 24h (não a cada aba/refresh) ──
+   lumem:lastLoginAt é gravado só num login de verdade (form ou Google),
+   nunca numa restauração automática — assim a janela de 24h conta a
+   partir da última vez que a pessoa realmente digitou a senha (ou
+   voltou do Google), não fica se renovando sozinha a cada refresh. */
+var LUMEM_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+function _lumemMarkFreshLogin(){
+  try{ localStorage.setItem('lumem:lastLoginAt', String(Date.now())); }catch(e){}
+}
+function _lumemSessionExpired(){
+  try{
+    var ts = parseInt(localStorage.getItem('lumem:lastLoginAt')||'0', 10);
+    if(!ts) return true; /* nunca logou de verdade nesse navegador — pede login */
+    return (Date.now() - ts) > LUMEM_SESSION_MAX_AGE_MS;
+  }catch(e){ return false; } /* falha ao ler não deve travar quem já tava logado */
+}
+async function _lumemForceFreshLogin(){
+  try{ sessionStorage.removeItem('lumem:persistSession'); }catch(e){}
+  try{ if(window._sb) await window._sb.auth.signOut(); }catch(e){}
+}
+
 /* ── Auto-restore session on page load / refresh ── */
 document.addEventListener('DOMContentLoaded', async function _restoreSession(){
   if(!window._SB_CONFIGURED){
     console.warn('Supabase não configurado — troque __SUPABASE_URL__ e __SUPABASE_ANON_KEY__ antes de publicar.');
+  }
+
+  /* Passaram-se mais de 24h desde o último login de verdade — força
+     tela de login de novo, mesmo que a sessão técnica ainda seja válida. */
+  if(_lumemSessionExpired()){
+    await _lumemForceFreshLogin();
+    document.getElementById('screenLogin').style.display = 'flex';
+    return;
   }
 
   var _saved = null;
@@ -7533,12 +7577,16 @@ document.addEventListener('DOMContentLoaded', async function _restoreSession(){
       var _oa = (await window._sb.auth.getSession()).data.session;
       if(_oa && _oa.user){
         document.getElementById('screenLogin').style.display = 'flex';
-        var _chkOA = await _authCheckApproval(_oa.user);
+        var _chkOA = await Promise.race([
+          _authCheckApproval(_oa.user),
+          new Promise(function(_,rj){ setTimeout(function(){ rj(new Error('timeout')); }, 12000); })
+        ]);
         var _emailOA = (_oa.user.email||'').toLowerCase();
         if(_chkOA.ok){
           _sbUserId = _oa.user.id; _fbUid = _sbUserId;
           _authCacheApprovedProfile(_emailOA, _chkOA.profile);
           var _roleOA = _chkOA.profile.role || 'collab';
+          _lumemMarkFreshLogin();
           await _enterDashboard(_emailOA, _roleOA);
         } else {
           _authShowPending(_chkOA.reason === 'rejected'
@@ -7547,7 +7595,11 @@ document.addEventListener('DOMContentLoaded', async function _restoreSession(){
         }
         return;
       }
-    }catch(exOA){ /* sem sessão — segue fluxo normal de login */ }
+    }catch(exOA){
+      /* timeout ou falha real de rede — não trava: mostra login normal
+         em vez de deixar o botão/tela presos pra sempre. */
+      try{ await window._sb.auth.signOut(); }catch(exSO2){}
+    }
   }
 
   document.getElementById('screenLogin').style.display = 'flex';
