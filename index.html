@@ -76,6 +76,7 @@
   *{ transition:background-color .15s, border-color .15s, color .15s; }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; overflow-x:hidden; }
   body{ background:var(--ambient-glow), var(--black); background-attachment:fixed; font-family:'Manrope',sans-serif; color:var(--text); height:100vh; width:100vw; overflow:hidden; display:flex; align-items:stretch; justify-content:center; }
   html[data-theme="light"] body{ background:var(--ambient-glow), var(--black); background-attachment:fixed; }
   @media(max-width:760px){ body{ height:auto; min-height:100vh; overflow-y:auto; } }
@@ -386,6 +387,10 @@
   .sb-mini-logo img{
     width:100%; height:100%; object-fit:contain; display:block;
   }
+  /* modo escuro: emblema com fundo claro (logo sozinha, invertida);
+     modo claro: mantém o fundo preto original do emblema */
+  html:not([data-theme="light"]) .sb-mini-logo img{ filter:invert(1) brightness(1.06); }
+  html[data-theme="light"] .sb-mini-logo img{ filter:none; }
 
   /* ── SIDEBAR TOGGLE BUTTON ── */
   .sb-toggle{
@@ -1132,7 +1137,7 @@
   }
   @media (max-width:760px){
     .app{ flex-direction:column; height:auto; min-height:100vh; overflow-y:auto; }
-    .sidebar{ width:100%; height:auto; flex-direction:row; align-items:center; border-right:none; border-bottom:1px solid var(--border); padding:calc(12px + env(safe-area-inset-top)) 16px 12px; gap:12px; overflow:visible; position:fixed; top:0; left:0; right:0; z-index:50; }
+    .sidebar{ width:100%; height:auto; flex-direction:row; align-items:center; border-right:none; border-bottom:1px solid var(--border); padding:calc(12px + env(safe-area-inset-top)) 16px 12px; gap:12px; overflow:visible; position:fixed; top:0; left:0; right:0; z-index:50; box-shadow:0 2px 14px rgba(0,0,0,.18); }
     .brand{ border-bottom:none; padding:0; }
     .brand img{ width:100px; }
     nav{ flex-direction:row; overflow-x:auto; overflow-y:hidden; flex:1; padding-bottom:4px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
@@ -1150,6 +1155,11 @@
     .modal{ padding:20px; }
     .dash-grid{ grid-template-columns:1fr; }
     .kanban-board{ padding-bottom:16px; }
+    /* evita texto vazando/cortando de forma esquisita no celular (iOS e Android) */
+    body, main, .card, .item-card, .table-card, .modal, .modal-body, p, span, div, td, th, label, textarea, input{ max-width:100%; }
+    main{ overflow-wrap:break-word; word-break:break-word; }
+    h1, h2, h3, .header-row h1, .header-row p{ overflow-wrap:break-word; word-break:break-word; }
+    img, svg{ max-width:100%; }
   }
   @media (max-width:480px){
     .stat-grid{ grid-template-columns:1fr 1fr; gap:8px; }
@@ -1171,7 +1181,7 @@
   }
   @media(max-width:600px){
     .app{ flex-direction:column; }
-    .sidebar{ width:100%; height:auto; min-height:unset; flex-direction:row; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; position:fixed; top:0; left:0; right:0; z-index:50; }
+    .sidebar{ width:100%; height:auto; min-height:unset; flex-direction:row; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; position:fixed; top:0; left:0; right:0; z-index:50; box-shadow:0 2px 14px rgba(0,0,0,.18); }
     .sidebar .brand{ display:none; }
     .sidebar .sidebar-bottom{ display:none; }
     nav{ flex-direction:row; overflow-x:auto; padding:0; gap:4px; }
@@ -1438,6 +1448,7 @@
   ════════════════════════════════════ */
   .port-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
   @media(max-width:600px){ .port-grid{ grid-template-columns:1fr 1fr; gap:12px; } }
+  @media(max-width:760px){ html[data-theme="light"] .sidebar{ box-shadow:0 2px 14px rgba(0,0,0,.10); } }
   @media(max-width:400px){ .port-grid{ grid-template-columns:1fr; } }
 
   .port-card{
@@ -4385,7 +4396,10 @@ function renderPastas(){
     var items = folder.projects || [];
     var totalItems = items.length;
 
-    var dropHtml = '<div class="pasta-dropdown" id="pdrop_'+fid+'" style="display:none;">'
+    /* Só a administradora troca capa, renomeia ou exclui pasta de cliente —
+       colaborador só visualiza (nem o menu "..." nem clicar na capa fazem nada). */
+    var _isPastaAdmin = typeof isAdmin==='function' && isAdmin();
+    var dropHtml = !_isPastaAdmin ? '' : ('<div class="pasta-dropdown" id="pdrop_'+fid+'" style="display:none;">'
       +'<button class="pasta-drop-item" onclick="_closePastaDrops();_pastaOpenCoverPicker(\''+fid+'\')">'
         +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
         +(folder.cover ? 'Trocar capa' : 'Adicionar capa')
@@ -4399,11 +4413,13 @@ function renderPastas(){
         +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>'
         +'Excluir pasta'
       +'</button>'
-    +'</div>';
+    +'</div>');
 
     var coverHtml = folder.cover
-      ? '<div class="pasta-card-cover" style="background-image:url(\''+folder.cover+'\')" onclick="event.stopPropagation();_pastaOpenCoverPicker(\''+fid+'\')" title="Clique para trocar a capa"></div>'
-      : '<div class="pasta-card-cover-empty" onclick="event.stopPropagation();_pastaOpenCoverPicker(\''+fid+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Adicionar capa</div>';
+      ? '<div class="pasta-card-cover" style="background-image:url(\''+folder.cover+'\')"'+(_isPastaAdmin?' onclick="event.stopPropagation();_pastaOpenCoverPicker(\''+fid+'\')" title="Clique para trocar a capa"':'')+'></div>'
+      : (_isPastaAdmin
+          ? '<div class="pasta-card-cover-empty" onclick="event.stopPropagation();_pastaOpenCoverPicker(\''+fid+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Adicionar capa</div>'
+          : '');
 
     /* Ativo/Inativo — reflete o status do mesmo cliente lá na aba Clientes (por nome) */
     var _linkedClient = (typeof clients !== 'undefined' ? clients : []).find(function(c){ return (c.name||'').trim().toLowerCase() === (folder.clientName||'').trim().toLowerCase(); });
