@@ -1979,12 +1979,19 @@ html[data-theme="light"] .cal-no-date-title { color:var(--text-dimmer); }
 .cmgr-row-btn.archived-icon { opacity:.35; }
 .cmgr-row.col-archived { opacity:.45; }
 .cmgr-row.col-archived .cmgr-label-input { text-decoration:line-through; }
-.cmgr-footer { padding:14px 24px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; gap:10px; }
-.cmgr-add-btn { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.06); border:1px dashed var(--border); color:var(--text-dim); border-radius:8px; padding:8px 14px; font-size:12.5px; cursor:pointer; transition:all .15s; }
+/* Fix: no celular o rodapé (botão "Nova coluna" + texto de legenda + botão
+   "Salvar") não quebrava linha, e o texto da legenda se recusava a
+   encolher (comportamento padrão de flexbox), empurrando o botão Salvar
+   pra fora da tela — sem jeito de rolar até ele. Agora o rodapé quebra
+   em duas linhas quando necessário, com os dois botões sempre visíveis
+   na primeira linha e a legenda (só decorativa) descendo pra linha de
+   baixo quando não cabe. */
+.cmgr-footer { padding:14px 24px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; flex-shrink:0; gap:8px 10px; }
+.cmgr-add-btn { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.06); border:1px dashed var(--border); color:var(--text-dim); border-radius:8px; padding:8px 14px; font-size:12.5px; cursor:pointer; transition:all .15s; flex-shrink:0; order:1; }
 .cmgr-add-btn:hover { background:rgba(255,255,255,.1); border-color:var(--accent); color:var(--text); }
-.cmgr-save-btn { background:var(--accent); border:none; color:#fff; border-radius:9px; padding:9px 22px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+.cmgr-save-btn { background:var(--accent); border:none; color:#fff; border-radius:9px; padding:9px 22px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .15s; flex-shrink:0; order:2; margin-left:auto; }
 .cmgr-save-btn:hover { opacity:.85; }
-.cmgr-legend { font-size:10.5px; color:var(--text-dim); text-align:center; flex:1; }
+.cmgr-legend { font-size:10.5px; color:var(--text-dim); text-align:center; flex:1 1 100%; order:3; }
 /* ClickUp-style column header controls */
 .kanban-col-head { position:relative; }
 .kc-menu-btn { background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; padding:2px 7px; border-radius:6px; line-height:1; opacity:.55; transition:opacity .15s, background .15s; flex-shrink:0; letter-spacing:1px; }
@@ -7223,14 +7230,30 @@ function _authShowPending(msg){
 }
 
 /* Garante um registro em team_profiles pro usuário autenticado.
-   Se ainda não existir, cria como 'pending' (ou 'approved' se for a dona/admin). */
+   Se ainda não existir, cria como 'pending' (ou 'approved' se for a dona/admin).
+   'rejected' é um status estável de verdade (aparece na lista "Recusados"
+   da Equipe, com botão de aprovar ou apagar de vez) — por isso NÃO é
+   trocado automaticamente aqui. Só corrige sozinho um status realmente
+   corrompido/desconhecido (nem approved, nem pending, nem rejected —
+   sobra de uma versão bem mais antiga do app), voltando ele pra 'pending'
+   pra administradora poder ver e decidir. */
 async function _authEnsureProfile(user){
   if(!window._sb || !user) return null;
   var email = (user.email || '').toLowerCase();
   var isOwner = email === OWNER_EMAIL;
+  var _knownStatuses = ['approved','pending','rejected'];
   try{
     var got = await window._sb.from('team_profiles').select('*').eq('id', user.id).maybeSingle();
-    if(got.data) return got.data;
+    if(got.data){
+      if(!isOwner && _knownStatuses.indexOf(got.data.status) === -1){
+        try{
+          var fixed = await window._sb.from('team_profiles').update({ status:'pending' }).eq('id', user.id).select().maybeSingle();
+          if(fixed.data) return fixed.data;
+        }catch(exFix){}
+        return Object.assign({}, got.data, { status:'pending' });
+      }
+      return got.data;
+    }
     var meta = user.user_metadata || {};
     var row = {
       id: user.id,
@@ -9964,14 +9987,20 @@ window.addEventListener('mousemove', (e)=>{
 const ADMIN_EMAIL = 'laura1525cristina@gmail.com';
 const TASKS_KEY   = 'lumem:tasks';
 
+/* Lista padrão de colunas de Demandas. A pedido da Laura, reduzida pra
+   ficar só com o conjunto que ela realmente usa (removidas LUCAS, THIA
+   e APROVAÇÃO CLIENTE) — assim toda conta nova (ou cópia do app pra
+   outra CEO) já nasce só com essas, sem precisar excluir nada na mão
+   toda vez. PENDENTES continua com auto:true de propósito: é pra onde
+   as tarefas atrasadas caem sozinhas (com alerta pra Laura e pra pessoa
+   responsável), então essa coluna nunca pode ser excluída — o próprio
+   gerenciador de colunas já trava o botão de excluir dela por causa
+   dessa flag. */
 const DEFAULT_COLUMNS = [
   { id:'pendentes',   label:'PENDENTES',         color:'#FF0A33', auto:true  },
   { id:'laura',       label:'LAURA',             color:'#3B82F6', person:'Laura'  },
-  { id:'lucas',       label:'LUCAS',             color:'#8B5CF6', person:'Lucas'  },
-  { id:'thia',        label:'THIA',              color:'#0EA5E9', person:'Thia'   },
   { id:'producao',    label:'EM PRODUÇÃO',        color:'#F59E0B' },
   { id:'aprovacao',   label:'PARA APROVAÇÃO',     color:'#F97316', safe:true },
-  { id:'aprov-cli',   label:'APROVAÇÃO CLIENTE',  color:'#EF4444', safe:true },
   { id:'aguardando',  label:'AGUARDANDO CLIENTE', color:'#FB923C', safe:true },
   { id:'alteracao',   label:'ALTERAÇÃO',          color:'#8B5CF6', safe:true },
   { id:'aprovados',   label:'PROJETOS APROVADOS', color:'#10B981', safe:true },
@@ -10331,7 +10360,8 @@ async function renderEquipeView(){
   }
   var pending  = rows.filter(function(r){ return r.status === 'pending'; });
   var approved = rows.filter(function(r){ return r.status === 'approved'; });
-  _equipeCache = { pending: pending, approved: approved };
+  var rejected = rows.filter(function(r){ return r.status === 'rejected'; });
+  _equipeCache = { pending: pending, approved: approved, rejected: rejected };
   /* Mantém a lista usada nos seletores de "Responsável" (Demandas/Pastas) sempre
      igual à equipe real do Supabase — é a mesma fonte, sem lista separada. */
   window._teamRoster = approved;
@@ -10378,6 +10408,24 @@ async function renderEquipeView(){
     });
   }
   html += '</div>';
+
+  html += '<div class="card" style="max-width:640px;margin-top:16px;">';
+  html += '<div class="card-label">Recusados (' + rejected.length + ')</div>';
+  if(!rejected.length){
+    html += '<p style="font-size:12.5px;color:var(--text-dim);">Ninguém recusado no momento.</p>';
+  } else {
+    html += '<p style="font-size:11.5px;color:var(--text-dim);margin:-2px 0 6px;">Ficam guardados aqui — aprove se mudar de ideia, ou apague de vez quando quiser.</p>';
+    rejected.forEach(function(u){
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border);">' +
+        '<div style="width:34px;height:34px;border-radius:50%;background:var(--border);color:var(--text-dim);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">' + (u.name||u.email||'?').charAt(0).toUpperCase() + '</div>' +
+        '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + escapeHtml(u.name||u.email) + '</div><div style="font-size:11.5px;color:var(--text-dim);">' + escapeHtml(u.email) + '</div></div>' +
+        '<button class="add-btn" style="background:rgba(16,185,129,.12);color:#10B981;border:1px solid rgba(16,185,129,.3);" onclick="_equipeApprove(\'' + u.id + '\')">✓ Aprovar</button>' +
+        '<button class="add-btn" style="background:rgba(255,10,51,.08);color:var(--red);border:1px solid rgba(255,10,51,.25);" onclick="_equipeDeletePermanent(\'' + u.id + '\')">🗑 Apagar de vez</button>' +
+      '</div>';
+    });
+  }
+  html += '</div>';
+
   box.innerHTML = html;
 }
 window.renderEquipeView = renderEquipeView;
@@ -10390,32 +10438,60 @@ window._equipeApprove = async function(id){
   }catch(ex){}
   renderEquipeView();
 };
-/* Fix: recusar/remover antes só marcava status:'rejected' — a pessoa sumia
-   das duas listas (não é 'pending' nem 'approved') e ficava travada pra
-   sempre, sem a administradora conseguir ver ou reconsiderar, e sem a
-   pessoa conseguir pedir acesso de novo. Agora apaga a linha de verdade:
-   se ela tentar entrar de novo (a senha dela continua existindo no
-   Supabase, só o painel do Supabase apaga isso), o app recria um pedido
-   novo em "Aguardando aprovação" do zero, como se fosse a primeira vez. */
+/* Chama a Edge Function "delete-team-member" pra apagar de vez o cadastro
+   E a conta de login no Supabase Auth — só usada quando a administradora
+   clica em "Apagar definitivamente" (nunca automaticamente em recusar/
+   remover, ver explicação abaixo). Se a função ainda não tiver sido
+   publicada (ou falhar por qualquer motivo), cai de volta pro apagar só
+   o cadastro (team_profiles) — a pessoa some da lista de qualquer jeito,
+   só não libera o e-mail dela pra criar conta nova até a administradora
+   publicar a função. */
+async function _equipeDeleteFully(id){
+  var funcOk = false;
+  try{
+    var _r = await window._sb.functions.invoke('delete-team-member', { body: { id: id } });
+    if(_r && !_r.error && (!_r.data || !_r.data.error)) funcOk = true;
+  }catch(ex){}
+  if(!funcOk){
+    try{ await window._sb.from('team_profiles').delete().eq('id', id); }catch(ex){}
+  }
+}
+/* Fix: "Recusar" e "Remover acesso" antes ou apagavam a linha na hora (a
+   pessoa só voltava a aparecer SE ela mesma tentasse fazer login de novo)
+   ou, num bug mais antigo ainda, deixavam a linha travada pra sempre. A
+   pedido da Laura: agora a pessoa recusada/removida continua visível numa
+   lista própria ("Recusados"), com botão pra aprovar ou apagar de vez —
+   sem precisar esperar ela tentar entrar de novo. Nada de instantâneo e
+   irreversível: só "Apagar definitivamente" apaga a conta de login. */
 window._equipeReject = async function(id){
   if(!window._sb) return;
   var _doReject = async function(){
-    try{ await window._sb.from('team_profiles').delete().eq('id', id); }catch(ex){}
+    try{ await window._sb.from('team_profiles').update({ status:'rejected' }).eq('id', id); }catch(ex){}
     renderEquipeView();
   };
   if(typeof showConfirm === 'function'){
-    showConfirm('Recusar cadastro', 'O pedido é apagado. Se ela tentar entrar de novo, o pedido aparece aqui em "Aguardando aprovação" outra vez, como um pedido novo.', _doReject);
+    showConfirm('Recusar cadastro', 'O pedido vai pra lista de "Recusados", onde você pode aprovar ou apagar de vez quando quiser.', _doReject);
   } else { _doReject(); }
 };
 window._equipeRemove = async function(id){
   if(!window._sb) return;
   var _doRemove = async function(){
-    try{ await window._sb.from('team_profiles').delete().eq('id', id); }catch(ex){}
+    try{ await window._sb.from('team_profiles').update({ status:'rejected' }).eq('id', id); }catch(ex){}
     renderEquipeView();
   };
   if(typeof showConfirm === 'function'){
-    showConfirm('Remover acesso', 'Essa pessoa perde o acesso agora. Se ela tentar entrar de novo, vira um pedido novo em "Aguardando aprovação".', _doRemove);
+    showConfirm('Remover acesso', 'Essa pessoa perde o acesso agora e vai pra lista de "Recusados", onde você pode aprovar de novo ou apagar de vez quando quiser.', _doRemove);
   } else { _doRemove(); }
+};
+window._equipeDeletePermanent = async function(id){
+  if(!window._sb) return;
+  var _doDelete = async function(){
+    await _equipeDeleteFully(id);
+    renderEquipeView();
+  };
+  if(typeof showConfirm === 'function'){
+    showConfirm('Apagar definitivamente', 'Isso apaga o cadastro E a conta de login dessa pessoa de vez. Se ela quiser voltar, precisa criar conta do zero. Não dá pra desfazer.', _doDelete);
+  } else { _doDelete(); }
 };
 window._equipeChangeRole = async function(id, role){
   if(!window._sb) return;
