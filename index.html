@@ -13128,6 +13128,7 @@ function _buildAvatarHtml(email, name, size){
   }
   return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.45)}px;font-weight:700;color:#fff;flex-shrink:0;">${label}</div>`;
 }
+window._buildAvatarHtml = _buildAvatarHtml; /* Fix: expõe pro Chat, que roda dentro de outra IIFE */
 
 /* ── Assignee picker for task modal ── */
 var _dmSelectedAssigneeEmail = '';
